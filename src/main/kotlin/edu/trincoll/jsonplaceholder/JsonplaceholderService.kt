@@ -22,9 +22,28 @@ data class BlogPost(
     //val userId: Int,
     val id: Int,
     val title: String,
-    val body: String
+    val body: String,
+    val model: String, 
+    val prompt: String,
+    val stream: Boolean = false
 )
 
+class ModelClient {
+    private val client = HttpClient(CIO) {
+        install(ContentNegotiation) {
+            json(Json {
+                ignoreUnknownKeys = true
+            })
+        }
+    }
+    suspend fun callModel(request: BlogPost): BlogPost {
+        return client.post("http://localhost:11434/api/generate") {
+            contentType(ContentType.Application.Json)
+            accept(ContentType.Application.Json)
+            setBody(request)
+        }.body()
+    }
+}
 class JsonPlaceholderService {
     private val baseUrl = "https://jsonplaceholder.typicode.com"
 
@@ -74,4 +93,18 @@ class JsonPlaceholderService {
         createHttpClient().use { client ->
             client.delete("$baseUrl/posts/$index")
         }
+}
+fun main() = runBlocking {
+    val modelClient = ModelClient()
+
+    val request = BlogPost(
+        id = 1,
+        title = "Welcome",
+        body = "Body",
+        model = "llama3.2",
+        prompt = "Is The Sky Blue?",
+        stream = false
+    )
+     val response = modelClient.callModel(request)
+    println("Response from model: ${response.body}")
 }
