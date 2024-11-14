@@ -16,6 +16,7 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.coroutines.runBlocking
 
 @Serializable
 data class BlogPost(
@@ -27,6 +28,10 @@ data class BlogPost(
     val prompt: String,
     val stream: Boolean = false
 )
+@Serializable
+data class ModelResponse(
+    val response: String 
+)
 
 class ModelClient {
     private val client = HttpClient(CIO) {
@@ -36,7 +41,7 @@ class ModelClient {
             })
         }
     }
-    suspend fun callModel(request: BlogPost): BlogPost {
+    suspend fun callModel(request: BlogPost): ModelResponse {
         return client.post("http://localhost:11434/api/generate") {
             contentType(ContentType.Application.Json)
             accept(ContentType.Application.Json)
@@ -105,6 +110,6 @@ fun main() = runBlocking {
         prompt = "Is The Sky Blue?",
         stream = false
     )
-     val response = modelClient.callModel(request)
-    println("Response from model: ${response.body}")
+    val response = modelClient.callModel(request)
+    println("Response from model: ${response.response}")
 }
